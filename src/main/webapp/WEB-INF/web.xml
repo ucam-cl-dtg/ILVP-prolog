@@ -1,0 +1,114 @@
+<!DOCTYPE web-app PUBLIC
+ "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+ "http://java.sun.com/dtd/web-app_2_3.dtd" >
+ 
+<web-app>
+	<display-name>Lecture Server</display-name>
+	<description>Video Lecture Server</description> 
+	<filter>
+		<filter-name>ravenFilter</filter-name>
+		<filter-class>uk.ac.cam.ucs.webauth.RavenFilter</filter-class>
+		<init-param>
+			<param-name>certificatePath</param-name>
+			<param-value>/WEB-INF/classes/raven-pubkey.crt</param-value>
+		</init-param>
+	</filter>
+	<filter>
+		<filter-name>FilterAuthenticate</filter-name>
+		<filter-class>uk.ac.cam.arb33.lectureserver.FilterAuthenticate</filter-class>
+	</filter>
+	<!-- <filter-mapping>
+		<filter-name>ravenFilter</filter-name>
+		<url-pattern>/teaching/*</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>ravenFilter</filter-name>
+		<url-pattern>/supervising/*</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>ravenFilter</filter-name>
+		<url-pattern>/video/*</url-pattern>
+	</filter-mapping>-->
+	<filter-mapping>
+		<filter-name>ravenFilter</filter-name>
+		<url-pattern>/ravenlogin</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>FilterAuthenticate</filter-name>
+		<url-pattern>/teaching/*</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>FilterAuthenticate</filter-name>
+		<url-pattern>/supervising/*</url-pattern>
+	</filter-mapping>
+	<filter-mapping>
+		<filter-name>FilterAuthenticate</filter-name>
+		<url-pattern>/video/*</url-pattern>
+	</filter-mapping>
+	<!-- <filter-mapping>
+		<filter-name>FilterAuthenticate</filter-name>
+		<url-pattern>/openlogin</url-pattern>
+	</filter-mapping> --> 
+	<servlet>
+		<servlet-name>ServletContent</servlet-name>
+		<servlet-class>uk.ac.cam.arb33.lectureserver.ServletContent</servlet-class>
+	</servlet> 
+	<servlet>
+		<servlet-name>Supervisors</servlet-name>
+		<servlet-class>uk.ac.cam.arb33.lectureserver.ServletSupervisor</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>Redirect</servlet-name>
+		<servlet-class>uk.ac.cam.arb33.lectureserver.ServletVideoRedirect</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>OpenLogin</servlet-name>
+		<servlet-class>uk.ac.cam.arb33.lectureserver.OpenLogin</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>RavenLogin</servlet-name>
+		<servlet-class>uk.ac.cam.arb33.lectureserver.RavenLogin</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>LazyLogin</servlet-name>
+		<servlet-class>uk.ac.cam.arb33.lectureserver.LazyLogin</servlet-class>
+	</servlet>
+	<servlet>
+	    <servlet-name>ReloadSoyTemplate</servlet-name>
+	    <servlet-class>uk.ac.cam.arb33.lectureserver.ReloadSoyTemplate</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>ServletContent</servlet-name>
+		<url-pattern>/teaching/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>Supervisors</servlet-name>
+		<url-pattern>/supervising/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>Redirect</servlet-name>
+		<url-pattern>/video/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>OpenLogin</servlet-name>
+		<url-pattern>/openlogin</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>RavenLogin</servlet-name>
+		<url-pattern>/ravenlogin</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>LazyLogin</servlet-name>
+		<url-pattern>/lazylogin</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>ReloadSoyTemplate</servlet-name>
+		<url-pattern>/reload</url-pattern>
+	</servlet-mapping>
+		<resource-ref>
+		<description>connect to postgres</description>
+		<res-ref-name>jdbc/prolog1415</res-ref-name>
+		<res-type>javax.sql.DataSource</res-type>
+		<res-auth>Container</res-auth>
+	</resource-ref>
+</web-app>

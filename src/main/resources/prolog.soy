@@ -1,0 +1,269 @@
+/*
+ * A set of templates to render a on-line lecture service
+ *
+ * Copyright 2012 Alastair R. Beresford
+ *
+ * This is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero Public License for more details.
+ *
+ * This library requires an HTML page, video.js, quiz.js and a JSON data file.
+ */
+{namespace uk.ac.cam.arb33.lectureserver.soy}
+
+/**
+ * Provide suitable formatting which is common across all pages
+ * @param title
+ * @param body
+ * @param? javascript
+ */
+{template .page}
+<!DOCTYPE html>
+<html>
+<head>
+//TODO(arb33): general security risk with noAutoescape (but safe here); upgrade to sanitized content
+ <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+ <title>{$title|noAutoescape}</title>
+ <link href="{$ij.contextPath}/css/video-js.css" rel="stylesheet">
+ <link href="{$ij.contextPath}/css/normalize.css" media="screen" rel="stylesheet" type="text/css">
+ <link href="{$ij.contextPath}/css/prolog.css" rel="stylesheet" type="text/css">
+ <script src="{$ij.contextPath}/js/video.js"></script>
+</head>
+<body>
+<script>
+//TODO(arb33): put this along with ajax.js into a compile-time generated page pushed into web tree
+var eventMap = {lb}
+{foreach $event in $ij.events}
+ {$event.key}: {$event.value}{if not isLast($event)},{/if}
+{/foreach}
+{rb};
+var eventUrl = '{$ij.contextAndServletPath}';
+</script>
+<div class="top">
+//TODO(arb33): Hack here to remove references to other parts of namespace used in breadcrumbs; improve
+ <a href="{$ij.contextAndServletPath}/1415/prolog">Prolog Home</a>&nbsp;&gt;&nbsp; 
+ {foreach $crumbUrl in $ij.breadcrumbUrl}
+  <a href="{$crumbUrl}/">{$ij.breadcrumb[index($crumbUrl)]}</a>&nbsp;&gt;&nbsp; 
+ {/foreach}
+ <span style="float:right;">{$ij.personFullName} ({$ij.personCrsid})</span>
+ </div>
+//TODO(arb33): general security risk with noAutoescape (but safe here); upgrade to sanitized content ||
+ {$body|noAutoescape}
+<script src="{$ij.contextPath}/js/jquery-1.7.2.min.js"></script>
+<script src="{$ij.contextPath}/js/quiz.js"></script>
+<script src="{$ij.contextPath}/js/lecture.js"></script>
+<script src="{$ij.contextPath}/js/data.js"></script>
+<script src="{$ij.contextPath}/js/ajax.js"></script>
+{if $javascript}
+//TODO(arb33): general security risk with noAutoescape (but safe here); upgrade to sanitized content
+<script>{$javascript|noAutoescape}</script>
+{/if}
+</body>
+</html>
+{/template}
+
+/**
+ * Render home page
+ */
+{template .homepage}
+{call .page}
+{param title}
+Computer Laboratory Interactive Lecture Server
+{/param}
+{param body}
+<h1>Computer Laboratory Interactive Lecture Server</h1>
+{/param}
+{/call}
+{/template}
+
+/**
+ * Render list of courses for the year.
+ * 
+ * @param list A list of maps representing web links of form {name: X, url Y}
+ */
+{template .courseThisYear}
+{call .page}
+{param title}
+ List of courses for //TODO(arb33): insert year of course here
+{/param}
+{param body}
+<ul>
+{foreach $item in $list}
+ <li><a href="{$ij.uri}/{$item.urlTitle}/">{$item.fullTitle}</a></li>
+{/foreach}
+</ul>
+{/param}
+{/call}
+{/template}
+
+/**
+ * Render a page for a particular course.
+ * 
+ * @param list A list of sessions, which each contains a list of activities
+ * @param title The title of the course
+ */
+{template .course}
+{call .page}
+{param title}
+{$title}
+{/param}
+{param body}
+<h1>{$title}</h1>
+
+<p>Welcome to the Prolog course! We hope you enjoy the material. Please get
+in contact with us via email if you experience any technical issues using this site. Additional course material:</p>
+
+<ul style="list-style-type: square;">
+//TODO(arb33): Need to neaten up generation of redirect URLs here and below.
+<li><a href="/ls/video/questions-student.pdf">All exercises in a single PDF</a></li>
+<li><a href="/ls/video/all-slides.pdf">All slides in a single PDF</a></li>
+<li>Source code for <a href="/ls/video/anagram.pl">anagram.pl</a> for video 7</li>
+<li><a href="http://www.cl.cam.ac.uk/teaching/current/Prolog/materials.html">Course errata</a>, check here for errors in slides or videos</li>
+</ul>
+
+<p><a href="mailto:arb33@cam.ac.uk">Alastair Beresford</a> and <a href="mailto:acr31@cam.ac.uk">Andrew Rice</a>.<br />
+<i>October 2014</i></p>
+
+{foreach $session in $list}
+//TODO(arb33): cope with an empty list of activities for a section
+<h4>{$session[0].section}</h4>
+<ul>
+{foreach $item in $session}
+ {let $onClick}
+   activityUpdate('{$ij.contextAndServletPath}', '{$item.id}', this.checked);
+ {/let}
+ <li>
+ {if $item.complete}
+   <input type="checkbox" checked="checked" onClick="{$onClick}"/>
+ {else}
+   <input type="checkbox" onClick="{$onClick}"/>
+ {/if}
+ &nbsp;<a href="{$ij.uri}/{$item.urlType}/{$item.urlTitle}/">{$item.fullTitle}</a>&nbsp;{$item.activityTime}
+ &nbsp;&nbsp;&nbsp;<span class="individualExercises">(<a href="/ls/video/{$item.urlTitle}-exercises.pdf">exercises</a>)</span>
+ </li>
+{/foreach}
+</ul>
+{/foreach}
+{/param}
+{/call}
+{/template}
+
+/**
+ * Render progress of students against list of their activities.
+ * 
+ * @param people List of people taking the course
+ * @param activities List of activities associated with the course
+ * @param completed A 2D array of activity completion data, one student per row.
+ * @param course Details on the course being undertaken
+ */
+{template .supervisorPage}
+{call .page}
+{param title}
+Progress of your students
+{/param}
+{param body}
+<h1>Progress of your students</h1>
+{if length($people) > 0}
+<table class="border">
+<tr><th class="border">Activity</th><th class="border">Type</th>
+{foreach $person in $people}
+<th class="border" title="{$person.firstname} {$person.familyname}">{$person.crsid}&nbsp;</th>
+{/foreach}
+</tr>
+{foreach $activity in $activities}
+<tr>
+//TODO(arb33): abstract "teaching" part of URL; consider 
+<td class="border">
+<a href="{$ij.contextPath}/teaching/{$course.urlVersion}/{$course.urlTitle}/{$activity.urlType}/{$activity.urlTitle}">
+{$activity.fullTitle}</a></td>
+<td class="border">{$activity.urlType}</td>
+{for $i in range(length($completed))}
+{if $completed[$i][index($activity)]}
+<td class="border complete">&#10004;</td>
+{else}
+<td class="border incomplete">&#10008;</td>
+{/if}
+{/for}
+</tr>
+{/foreach}
+</table>
+{else}
+<p><i>You currently have no students for this course.</i></p>
+{/if}
+{/param}
+{/call}
+{/template}
+
+/**
+ * A video activity page.
+ * 
+ * @param title The title of the activity
+ * @param urlVideo Url to location of video file, without extension; page appends {.mp4, .ogv, .pdf}
+ * @param metadata Video playback details in JSON format
+ */
+{template .videoActivity}
+{call .page}
+{param title}
+{$title}
+{/param}
+{param body}
+<h1>{$title}</h1>
+<p><video id="video" class="video-js vjs-default-skin" 
+   controls preload="auto" width="640" height="480">
+   <source src="{$urlVideo}.mp4" type='video/mp4' />
+   <source src="{$urlVideo}.ogv" type='video/ogg' />
+  </video>
+</p>
+
+<p class="questionControls">
+<input id="pauseVideoTickbox" type="checkbox" checked/>
+Pause video for interactive questions
+<span class="download"><b>Download:</b> 
+ <a href="{$urlVideo}.mp4">MP4</a> |
+ <a href="{$urlVideo}.ogv">OGV</a> | 
+ <a href="{$urlVideo}.pdf">PDF</a> 
+</span><br/>
+<span id="absolutePositionText"><input id="absolutePosition" type="checkbox" checked/>
+Overlay questions on slides</span>
+</p>
+
+<p class="videoIndexes">
+Slide: <span id="slideIndex"></span> 
+ (<a id="slidePrev" href="">prev</a> | 
+ 	<a id="slideRepeat" href="">replay</a> | 
+ 	<a id="slideNext" href="">next</a> | 
+ 	<a id="slideMinus5" href="">-5s</a> | 
+ 	<a id="slidePlus5" href="">+5s</a>
+ )<br/>
+</p>
+
+<p class="videoIndexes">
+Question: <span id="questionIndex"></span> 
+ (<a id="questionPrev" href="">prev</a> | 
+ 	<a id="questionRepeat" href="">replay</a> | 
+ 	<a id="questionNext" href="">next</a>
+ )
+</p>
+
+<p id="speedControls" class="videoIndexes">
+Playback speed: <span id="speedIndex"></span>
+</p>
+
+<div id="quiz" style="display: none;"></div>
+
+<p><span class="debugData">
+<span id="videoMouseLocation">(x,y)</span> | <span id="timeInSecs">-</span>
+</span>
+</p>
+{/param}
+{param javascript}
+lecture("{$metadata}", data["{$metadata}"]);
+{/param}
+{/call}
+{/template}
