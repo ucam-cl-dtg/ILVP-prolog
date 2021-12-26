@@ -147,7 +147,7 @@ var lecture = function(videoname, videodata) {
 			a.addClass('slideControl');
 			a.on('click', adjustSpeed(supportedSpeeds[i]));
 			a.attr('id', 'speedIndex' + i);
-			$('#peedIndex').append(a).append('&nbsp;');
+			$('#speedIndex').append(a).append('&nbsp;');
 		}
 		
 		//Detect whether we are using the flash plugin or not; hide overlay option if so
